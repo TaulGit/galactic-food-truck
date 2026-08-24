@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">银河餐车</title>
+  <desc id="desc">一口盛着星光料理的蓝紫色烹饪锅</desc>
+  <defs>
+    <linearGradient id="space" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#111c45"/>
+      <stop offset=".55" stop-color="#41236e"/>
+      <stop offset="1" stop-color="#ec8067"/>
+    </linearGradient>
+    <radialGradient id="steam" cx="50%" cy="45%" r="55%">
+      <stop stop-color="#ffe8a2" stop-opacity=".96"/>
+      <stop offset="1" stop-color="#ffb65a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pot" x1="0" x2="0" y1="0" y2="1">
+      <stop stop-color="#7be4e2"/>
+      <stop offset="1" stop-color="#3265ac"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#space)"/>
+  <g fill="#fff5d6">
+    <circle cx="92" cy="122" r="4"/><circle cx="180" cy="65" r="2"/><circle cx="306" cy="142" r="5"/>
+    <circle cx="1028" cy="104" r="4"/><circle cx="1170" cy="170" r="3"/><circle cx="894" cy="67" r="2"/>
+    <circle cx="1160" cy="514" r="5"/><circle cx="160" cy="572" r="3"/><circle cx="364" cy="614" r="2"/>
+  </g>
+  <circle cx="1042" cy="225" r="114" fill="#ffcb70" opacity=".9"/>
+  <circle cx="1030" cy="208" r="114" fill="#ffd891" opacity=".38"/>
+  <path d="M0 544C186 458 325 599 491 524c167-75 298 13 453-69 123-65 230-36 336 11v254H0Z" fill="#0b1430" opacity=".72"/>
+  <ellipse cx="641" cy="528" rx="300" ry="52" fill="#0a1129" opacity=".45"/>
+  <g transform="translate(640 393)">
+    <ellipse cy="-72" rx="185" ry="74" fill="url(#steam)" opacity=".88"/>
+    <path d="M-170-10c-75 8-89 88-24 105l57-5" fill="none" stroke="#62bfc6" stroke-linecap="round" stroke-width="35"/>
+    <path d="M170-10c75 8 89 88 24 105l-57-5" fill="none" stroke="#62bfc6" stroke-linecap="round" stroke-width="35"/>
+    <path d="M-168-30h336l-27 178c-6 42-43 72-86 72H-55c-43 0-80-30-86-72Z" fill="url(#pot)" stroke="#b6ffff" stroke-width="8"/>
+    <ellipse cy="-31" rx="176" ry="61" fill="#1d2759" stroke="#b6ffff" stroke-width="8"/>
+    <ellipse cy="-31" rx="151" ry="44" fill="#f28b63"/>
+    <g fill="#fff0a6">
+      <circle cx="-76" cy="-47" r="16"/><circle cx="-12" cy="-20" r="17"/><circle cx="64" cy="-46" r="14"/>
+    </g>
+    <path d="M-59-146c-28-32 8-47-10-83M6-137c-28-32 8-47-10-83M71-145c-28-32 8-47-10-83" fill="none" stroke="#fff4ca" stroke-linecap="round" stroke-width="15"/>
+  </g>
+  <text x="640" y="122" text-anchor="middle" fill="#fff7dc" font-family="system-ui, sans-serif" font-size="77" font-weight="800" letter-spacing="9">银河餐车</text>
+  <text x="640" y="177" text-anchor="middle" fill="#b8e8ee" font-family="system-ui, sans-serif" font-size="27" letter-spacing="5">GALACTIC KITCHEN</text>
+</svg>
