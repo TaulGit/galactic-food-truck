@@ -1,6 +1,6 @@
 {
-  "gameId": 0,
-  "title": "银河餐车",
+  "gameId": 3434,
+  "title": "星厨餐车",
   "tags": [
     "烹饪",
     "休闲",
@@ -10,11 +10,15 @@
     10004,
     10005
   ],
-  "summary": "在一间星际厨房里，取料、下锅、出餐，完成五份银河订单。",
-  "cover": "./public/cover.svg",
+  "summary": "驾驶星际餐车，收集食材、烹饪料理，完成五份订单。",
+  "cover": "./public/cover.png",
   "gameFile": "./dist",
   "gameType": 0,
   "screen": 0,
   "priceType": 0,
-  "visibility": 1
+  "visibility": 1,
+  "activityIds": [
+    5001,
+    4001
+  ]
 }

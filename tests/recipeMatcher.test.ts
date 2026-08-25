@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import type { IngredientId } from "../src/game/ingredients";
 import { FAILED_RECIPE, type RecipeId } from "../src/game/recipes";
 import {
+  CAMPFIRE_INGREDIENT_COUNT,
   REQUIRED_INGREDIENT_COUNT,
   getMatchingRecipes,
   hasRequiredIngredientCount,
+  isGrillableIngredient,
+  matchGrilledDish,
   matchRecipe,
 } from "../src/game/recipeMatcher";
 
@@ -88,5 +91,14 @@ describe("recipeMatcher", () => {
     expect(getMatchingRecipes(overfilled)).toEqual([]);
     expect(matchRecipe(incomplete).id).toBe(FAILED_RECIPE.id);
     expect(matchRecipe(overfilled).id).toBe(FAILED_RECIPE.id);
+  });
+
+  it("resolves one edible ingredient as a campfire dish", () => {
+    expect(CAMPFIRE_INGREDIENT_COUNT).toBe(1);
+    expect(isGrillableIngredient("meat")).toBe(true);
+    expect(isGrillableIngredient("twig")).toBe(false);
+    expect(matchGrilledDish(["meat"]).id).toBe("grilled_meat");
+    expect(matchGrilledDish(["twig"]).id).toBe(FAILED_RECIPE.id);
+    expect(matchGrilledDish(["meat", "fish"]).id).toBe(FAILED_RECIPE.id);
   });
 });

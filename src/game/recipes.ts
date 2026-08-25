@@ -9,8 +9,20 @@ export const RECIPE_IDS = [
 ] as const;
 
 export type RecipeId = (typeof RECIPE_IDS)[number];
+
+export const GRILLED_DISH_IDS = [
+  "grilled_meat",
+  "grilled_fish",
+  "grilled_egg",
+  "grilled_carrot",
+  "grilled_mushroom",
+  "grilled_berries",
+] as const;
+
+export type GrilledDishId = (typeof GRILLED_DISH_IDS)[number];
+export type OrderId = RecipeId | GrilledDishId;
 export type FailedDishId = "failed_dish";
-export type DishId = RecipeId | FailedDishId;
+export type DishId = RecipeId | GrilledDishId | FailedDishId;
 
 export type TagRule = Readonly<Partial<Record<IngredientTag, number>>>;
 export type IngredientRule = Readonly<Partial<Record<IngredientId, number>>>;
@@ -35,6 +47,15 @@ export interface Recipe {
   readonly condition: RecipeCondition;
 }
 
+export interface GrilledDish {
+  readonly id: GrilledDishId;
+  readonly name: string;
+  readonly icon: string;
+  readonly hint: string;
+  readonly ingredientId: IngredientId;
+  readonly isFailure: false;
+}
+
 export interface FailedDish {
   readonly id: FailedDishId;
   readonly name: string;
@@ -43,7 +64,7 @@ export interface FailedDish {
   readonly isFailure: true;
 }
 
-export type CookedDish = Recipe | FailedDish;
+export type CookedDish = Recipe | GrilledDish | FailedDish;
 
 /**
  * Recipes are deliberately ordered by priority as a human-readable backup to
@@ -108,10 +129,67 @@ export const RECIPES: readonly Recipe[] = [
   },
 ];
 
+/** One-ingredient dishes made by the campfire instead of the cooking pot. */
+export const GRILLED_DISHES: readonly GrilledDish[] = [
+  {
+    id: "grilled_meat",
+    name: "烤肉",
+    icon: "🍖",
+    hint: "篝火直接烤制肉",
+    ingredientId: "meat",
+    isFailure: false,
+  },
+  {
+    id: "grilled_fish",
+    name: "烤鱼",
+    icon: "🐟",
+    hint: "篝火直接烤制鱼",
+    ingredientId: "fish",
+    isFailure: false,
+  },
+  {
+    id: "grilled_egg",
+    name: "烤蛋",
+    icon: "🍳",
+    hint: "篝火直接烤制蛋",
+    ingredientId: "egg",
+    isFailure: false,
+  },
+  {
+    id: "grilled_carrot",
+    name: "烤胡萝卜",
+    icon: "🥕",
+    hint: "篝火直接烤制胡萝卜",
+    ingredientId: "carrot",
+    isFailure: false,
+  },
+  {
+    id: "grilled_mushroom",
+    name: "烤蘑菇",
+    icon: "🍄",
+    hint: "篝火直接烤制蘑菇",
+    ingredientId: "mushroom",
+    isFailure: false,
+  },
+  {
+    id: "grilled_berries",
+    name: "烤浆果",
+    icon: "🫐",
+    hint: "篝火直接烤制浆果",
+    ingredientId: "berries",
+    isFailure: false,
+  },
+];
+
+export const COOKABLE_DISHES: readonly (Recipe | GrilledDish)[] = [
+  ...RECIPES,
+  ...GRILLED_DISHES,
+];
+
 export const FAILED_RECIPE: FailedDish = {
   id: "failed_dish",
   name: "失败料理",
   icon: "🥣",
-  hint: "这锅食材没有组成可用料理",
+  hint: "这些食材没有组成可用料理",
   isFailure: true,
 };

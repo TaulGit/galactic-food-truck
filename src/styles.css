@@ -1,5 +1,5 @@
 /*
- * 银河餐车 — 原创简化星际厨房视觉
+ * 星厨餐车 — 原创简化星际厨房视觉
  *
  * 这份样式只依赖语义 class 与 data-state；不要求图片资源。
  * 房间在桌面保持 16:9，窄屏会改为纵向可操作的设施布局。
@@ -246,6 +246,24 @@ button:focus-visible,
   font-size: 0.78rem;
 }
 
+.utensil-switch-button {
+  flex-direction: column;
+  min-width: min(12rem, 43vw);
+  gap: 0.08rem;
+  padding: 0.36rem 0.55rem;
+  line-height: 1.05;
+}
+
+.utensil-switch-button small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 0.6rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Room -------------------------------------------------------------------- */
 
 .room {
@@ -316,6 +334,18 @@ button:focus-visible,
   pointer-events: none;
 }
 
+.room-background__art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.72;
+  filter: saturate(0.92) brightness(0.82);
+  user-select: none;
+}
+
 .room-background::before,
 .room-background::after {
   position: absolute;
@@ -356,18 +386,13 @@ button:focus-visible,
   gap: var(--space-2);
   min-width: 0;
   min-height: 4rem;
-  overflow: hidden;
+  overflow: visible;
   padding: clamp(0.7rem, 1.5vw, 1.15rem);
   color: var(--ink);
-  border: 1px solid var(--facility-line, rgba(196, 202, 255, 0.3));
-  border-radius: clamp(1rem, 2.1vw, 1.65rem);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.11), transparent 33%),
-    var(--facility-fill, rgba(38, 41, 91, 0.93));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1.5rem 2.5rem rgba(0, 0, 30, 0.2),
-    0 0.85rem 1.5rem rgba(0, 0, 22, 0.22);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   text-align: center;
   transition:
     transform 160ms ease,
@@ -380,13 +405,7 @@ button:focus-visible,
 }
 
 .facility::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0.35rem;
-  content: "";
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: calc(clamp(1rem, 2.1vw, 1.65rem) - 0.3rem);
-  opacity: 0.75;
+  display: none;
 }
 
 .facility::after {
@@ -408,17 +427,75 @@ button:focus-visible,
   max-width: 100%;
 }
 
+.facility-art {
+  display: block;
+  flex: 0 1 auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 0.7rem 0.85rem rgba(3, 7, 30, 0.36));
+}
+
+.facility-art--fridge {
+  width: min(100%, 11.25rem);
+  max-height: clamp(9rem, 24vw, 15rem);
+  margin-top: -0.35rem;
+}
+
+.facility-art--chest {
+  width: min(100%, 13rem);
+  max-height: clamp(4.75rem, 10vw, 7.5rem);
+  margin-top: -0.15rem;
+}
+
+.facility-art--pot {
+  width: min(100%, 17.5rem);
+  max-height: clamp(7rem, 16vw, 10.5rem);
+  margin-top: -0.55rem;
+}
+
+.pot-lid-toggle {
+  display: grid;
+  flex: 0 1 auto;
+  width: min(100%, 17.5rem);
+  margin-top: -0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 1.4rem;
+  background: transparent;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.pot-lid-toggle .facility-art--pot {
+  width: 100%;
+  max-height: clamp(7rem, 16vw, 10.5rem);
+  margin: 0;
+}
+
+.pot-lid-toggle:hover,
+.pot-lid-toggle:focus-visible {
+  filter: brightness(1.12) saturate(1.1);
+  transform: translateY(-0.12rem);
+}
+
+.pot-lid-toggle:active {
+  transform: translateY(0.08rem) scale(0.985);
+}
+
+.facility-art--campfire {
+  width: min(100%, 19rem);
+  max-height: clamp(8.8rem, 20vw, 13.5rem);
+  margin: -1.1rem 0 -1.4rem;
+  mix-blend-mode: screen;
+  filter: saturate(1.12) drop-shadow(0 0.7rem 0.85rem rgba(3, 7, 30, 0.42));
+}
+
 .facility:hover:not(:disabled),
 .facility:focus-visible,
 .facility[data-state="active"],
 .facility.is-active {
   z-index: 2;
-  border-color: var(--facility-glow, var(--cyan));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 0 0 0.18rem color-mix(in srgb, var(--facility-glow, var(--cyan)) 18%, transparent),
-    0 0.85rem 1.5rem rgba(0, 0, 22, 0.24),
-    0 0 2rem color-mix(in srgb, var(--facility-glow, var(--cyan)) 23%, transparent);
+  box-shadow: none;
   filter: saturate(1.15) brightness(1.08);
   transform: translateY(-0.2rem);
 }
@@ -507,14 +584,62 @@ button:focus-visible,
   border-radius: 44% 44% 35% 35% / 31% 31% 43% 43%;
 }
 
+.campfire {
+  grid-area: pot;
+  justify-self: center;
+  width: min(100%, 20rem);
+  min-height: min(100%, 17rem);
+  padding-top: clamp(1.2rem, 2.1vw, 1.8rem);
+  --facility-fill: linear-gradient(145deg, #593044, #251a42 62%, #15152f);
+  --facility-line: rgba(255, 155, 101, 0.7);
+  --facility-glow: #ff824f;
+  border-radius: 1.45rem 1.45rem 1.8rem 1.8rem;
+}
+
+.campfire::before {
+  border-color: rgba(255, 199, 130, 0.22);
+  background: linear-gradient(to bottom, rgba(255, 134, 66, 0.12), transparent 55%);
+}
+
+.campfire::after {
+  z-index: 2;
+  top: 0.65rem;
+  background: #ff965d;
+  box-shadow: 0 0 1rem rgba(255, 117, 63, 0.95);
+}
+
+.campfire > .facility-art--campfire {
+  position: absolute;
+  z-index: 0;
+  inset: 0.25rem 0 1.3rem;
+  width: 100%;
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+}
+
+.campfire > :is(strong, span, .pot-slots, .panel-actions) {
+  z-index: 3;
+}
+
+.campfire > span {
+  max-width: 88%;
+  padding: 0.18rem 0.42rem;
+  border-radius: 0.45rem;
+  background: rgba(13, 9, 28, 0.66);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+.campfire[data-state="cooking"] .facility-art--campfire {
+  animation: campfire-art-flicker 900ms ease-in-out infinite alternate;
+}
+
 .pot::before {
-  inset: 0.8rem 1.15rem auto;
-  height: 29%;
+  inset: 1.1rem 1.4rem auto;
+  height: 22%;
   border-radius: 50%;
-  background:
-    radial-gradient(ellipse at 50% 55%, rgba(7, 10, 38, 0.93) 0 37%, rgba(179, 134, 255, 0.45) 39% 47%, transparent 49%),
-    radial-gradient(ellipse at 50% 50%, rgba(245, 226, 255, 0.18), transparent 63%);
-  box-shadow: 0 -0.1rem 0 rgba(231, 218, 255, 0.42);
+  background: radial-gradient(ellipse, rgba(223, 214, 255, 0.14), transparent 68%);
+  box-shadow: 0 -0.1rem 0 rgba(231, 218, 255, 0.18);
 }
 
 .pot::after {
@@ -526,9 +651,15 @@ button:focus-visible,
 
 .serving-window {
   grid-area: serving;
-  --facility-fill: linear-gradient(150deg, #8b3a4e, #5a2748 62%, #31193b);
-  --facility-line: rgba(255, 145, 131, 0.62);
-  --facility-glow: var(--coral);
+  --facility-fill: linear-gradient(150deg, #2e6280, #1c365e 62%, #121932);
+  --facility-line: rgba(113, 235, 255, 0.57);
+  --facility-glow: var(--cyan);
+}
+
+.facility-art--serving {
+  width: min(100%, 13rem);
+  max-height: clamp(11rem, 25vw, 18rem);
+  margin-top: -0.55rem;
 }
 
 .serving-window::before {
@@ -683,7 +814,9 @@ button:focus-visible,
   z-index: 6;
   display: grid;
   gap: var(--space-2);
-  width: clamp(12.5rem, 28%, 17rem);
+  width: auto;
+  min-width: 0;
+  max-width: none;
   padding: clamp(0.65rem, 1.15vw, 0.9rem);
   color: var(--ink);
   border: 1px solid rgba(215, 221, 255, 0.52);
@@ -700,27 +833,22 @@ button:focus-visible,
 }
 
 .storage-panel::before {
-  position: absolute;
-  top: 50%;
-  left: -0.4rem;
-  width: 0.75rem;
-  height: 0.75rem;
-  content: "";
-  border-bottom: 1px solid rgba(215, 221, 255, 0.52);
-  border-left: 1px solid rgba(215, 221, 255, 0.52);
-  background: #202355;
-  transform: translateY(-50%) rotate(45deg);
+  display: none;
 }
 
 .storage-panel--fridge {
-  top: 17%;
-  left: calc(33.333% + clamp(0.25rem, 0.8vw, 0.7rem));
+  grid-area: fridge;
+  inset: 0;
   border-color: rgba(115, 235, 255, 0.65);
 }
 
 .storage-panel--chest {
-  bottom: clamp(0.7rem, 1.5vw, 1rem);
-  left: calc(33.333% + clamp(0.25rem, 0.8vw, 0.7rem));
+  grid-area: chest;
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: clamp(15.5rem, 32%, 18rem);
   border-color: rgba(255, 202, 105, 0.66);
 }
 
@@ -872,6 +1000,16 @@ button:focus-visible,
   line-height: 1;
 }
 
+.storage-slot__icon img,
+.pot-slot__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0.18rem 0.25rem rgba(0, 0, 20, 0.35));
+  user-select: none;
+}
+
 .storage-slot:has(.storage-slot__icon)::before {
   display: none;
 }
@@ -879,6 +1017,19 @@ button:focus-visible,
 .storage-slot__name {
   width: 100%;
   color: var(--ink-soft);
+}
+
+.storage-slot__status {
+  position: absolute;
+  top: 0.22rem;
+  right: 0.22rem;
+  padding: 0.1rem 0.22rem;
+  color: #ffd8b9;
+  border: 1px solid rgba(255, 141, 92, 0.4);
+  border-radius: 0.3rem;
+  background: rgba(91, 37, 48, 0.78);
+  font-size: 0.5rem !important;
+  line-height: 1 !important;
 }
 
 .storage-panel__tip {
@@ -1117,6 +1268,11 @@ button:focus-visible,
   margin: auto 0 0;
 }
 
+.campfire-slots {
+  grid-template-columns: minmax(3.2rem, 4.2rem);
+  justify-content: center;
+}
+
 .pot-slot {
   position: relative;
   display: grid;
@@ -1151,6 +1307,13 @@ button:focus-visible,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pot-slot__icon {
+  display: grid;
+  width: 82%;
+  height: 82%;
+  place-items: center;
 }
 
 .pot-slot.filled,
@@ -1190,18 +1353,25 @@ button:focus-visible,
 }
 
 .pot[data-state="cooking"],
-.app-shell[data-state="cooking"] .pot {
+.campfire[data-state="cooking"],
+.app-shell[data-state="cooking"] .pot,
+.app-shell[data-state="cooking"] .campfire {
   animation: pot-rumble 760ms ease-in-out infinite;
 }
 
 .pot[data-state="cooking"]::before,
-.app-shell[data-state="cooking"] .pot::before {
+.campfire[data-state="cooking"]::before,
+.app-shell[data-state="cooking"] .pot::before,
+.app-shell[data-state="cooking"] .campfire::before {
   animation: pot-bubble 900ms ease-in-out infinite;
 }
 
 .pot[data-state="ready"],
+.campfire[data-state="ready"],
 .pot.is-ready,
-.app-shell[data-state="ready"] .pot {
+.campfire.is-ready,
+.app-shell[data-state="ready"] .pot,
+.app-shell[data-state="ready"] .campfire {
   border-color: rgba(255, 221, 133, 0.96);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.29),
@@ -1211,8 +1381,11 @@ button:focus-visible,
 }
 
 .pot[data-state="ready"]::after,
+.campfire[data-state="ready"]::after,
 .pot.is-ready::after,
-.app-shell[data-state="ready"] .pot::after {
+.campfire.is-ready::after,
+.app-shell[data-state="ready"] .pot::after,
+.app-shell[data-state="ready"] .campfire::after {
   width: 2.55rem;
   background: var(--amber);
   box-shadow: 0 0 1.15rem rgba(255, 200, 105, 0.92);
@@ -1518,6 +1691,20 @@ button:focus-visible,
   }
 }
 
+@keyframes campfire-art-flicker {
+  from {
+    opacity: 0.82;
+    transform: scale(0.985);
+    filter: saturate(1.05) brightness(0.92) drop-shadow(0 0.7rem 0.85rem rgba(3, 7, 30, 0.42));
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.015);
+    filter: saturate(1.24) brightness(1.1) drop-shadow(0 0.7rem 1.15rem rgba(255, 116, 55, 0.38));
+  }
+}
+
 @keyframes pot-bubble {
   0%,
   100% {
@@ -1718,11 +1905,10 @@ button:focus-visible,
   .room[data-storage-open="true"] {
     grid-template:
       "fridge chest" minmax(5.5rem, 0.7fr)
-      "storage storage" minmax(11rem, auto)
       "pot pot" minmax(11.5rem, 1.35fr)
       "serving serving" minmax(5.5rem, 0.7fr)
       / minmax(0, 1fr) minmax(0, 1fr);
-    min-height: min(91dvh, 43rem);
+    min-height: min(68dvh, 32rem);
   }
 
   .room::after {
@@ -1741,6 +1927,61 @@ button:focus-visible,
     border-radius: 1rem;
   }
 
+  .fridge,
+  .chest {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-items: start;
+    column-gap: 0.45rem;
+    row-gap: 0.1rem;
+    text-align: left;
+  }
+
+  .fridge .facility-art,
+  .chest .facility-art {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 3.4rem;
+    max-height: 3.4rem;
+    margin: 0;
+  }
+
+  .pot .facility-art {
+    width: min(100%, 13rem);
+    max-height: 7.25rem;
+    margin-top: -0.2rem;
+  }
+
+  .pot-lid-toggle {
+    width: min(100%, 13rem);
+    margin-top: -0.2rem;
+  }
+
+  .pot-lid-toggle .facility-art--pot {
+    max-height: 7.25rem;
+  }
+
+  .serving-window {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-items: start;
+    column-gap: 0.55rem;
+    row-gap: 0.1rem;
+    text-align: left;
+  }
+
+  .serving-window .facility-art--serving {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 4.5rem;
+    max-height: 4.5rem;
+    margin: 0;
+  }
+
   .facility::before {
     inset: 0.25rem;
     border-radius: 0.76rem;
@@ -1752,10 +1993,15 @@ button:focus-visible,
     height: 1.15rem;
   }
 
-  .pot {
+  .pot,
+  .campfire {
     width: min(100%, 17.5rem);
     min-height: 11.5rem;
     border-radius: 45% 45% 37% 37% / 31% 31% 43% 43%;
+  }
+
+  .campfire {
+    border-radius: 1.15rem 1.15rem 1.35rem 1.35rem;
   }
 
   .serving-window {
@@ -1807,6 +2053,10 @@ button:focus-visible,
     width: min(100%, 15.5rem);
   }
 
+  .campfire-slots {
+    width: min(100%, 5rem);
+  }
+
   .pot-slot {
     min-height: 2.8rem;
   }
@@ -1830,8 +2080,8 @@ button:focus-visible,
   }
 
   .storage-panel {
-    position: relative;
-    grid-area: storage;
+    position: absolute;
+    inset: 0;
     align-self: stretch;
     width: auto;
     min-height: 0;
@@ -1842,18 +2092,15 @@ button:focus-visible,
 
   .storage-panel--fridge,
   .storage-panel--chest {
-    top: auto;
-    bottom: auto;
-    left: auto;
+    inset: 0;
+  }
+
+  .storage-panel--chest {
+    height: 18rem;
   }
 
   .storage-panel::before {
-    top: -0.4rem;
-    left: 25%;
-    border: 1px solid rgba(215, 221, 255, 0.52);
-    border-right: 0;
-    border-bottom: 0;
-    transform: translateX(-50%) rotate(45deg);
+    display: none;
   }
 
   .storage-grid {
@@ -1878,6 +2125,11 @@ button:focus-visible,
   .action-button {
     min-height: 2.75rem;
   }
+
+  .utensil-switch-button {
+    min-width: 0;
+    flex: 1 1 9rem;
+  }
 }
 
 @media (max-width: 23rem) {
@@ -1894,7 +2146,7 @@ button:focus-visible,
   }
 
   .room[data-storage-open="true"] {
-    min-height: min(96dvh, 45rem);
+    min-height: min(70dvh, 30rem);
   }
 
   .storage-slot {

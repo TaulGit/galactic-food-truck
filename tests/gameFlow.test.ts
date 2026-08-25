@@ -15,6 +15,9 @@ function createClock() {
 }
 
 function addAndCook(flow: GameFlow, ingredients: Parameters<GameFlow['addIngredient']>[0][]) {
+  if (flow.state.cookingTool === 'pot' && !flow.state.potLidOpen) {
+    expect(flow.togglePotLid().ok).toBe(true)
+  }
   for (const ingredient of ingredients) {
     expect(flow.addIngredient(ingredient).ok).toBe(true)
   }
@@ -43,6 +46,48 @@ describe('GameFlow', () => {
     expect(flow.finishCooking().ok).toBe(true)
     expect(flow.state.phase).toBe('READY')
     expect(flow.state.finishedDish?.id).toBe('meatballs')
+  })
+
+  it('starts with a closed pot, opens it for loading, and keeps the lid open while editing', () => {
+    const flow = new GameFlow()
+
+    expect(flow.state.potLidOpen).toBe(false)
+    expect(flow.addIngredient('meat').ok).toBe(false)
+    expect(flow.togglePotLid().ok).toBe(true)
+    expect(flow.state.potLidOpen).toBe(true)
+    expect(flow.addIngredient('meat').ok).toBe(true)
+    expect(flow.togglePotLid().ok).toBe(false)
+    expect(flow.removeIngredient(0).ok).toBe(true)
+    expect(flow.togglePotLid().ok).toBe(true)
+    expect(flow.state.potLidOpen).toBe(false)
+  })
+
+  it('switches to the campfire for one-ingredient direct grilling', () => {
+    const clock = createClock()
+    const flow = new GameFlow({
+      now: clock.now,
+      random: () => 0,
+      cookDurationMs: 3_000,
+      campfireCookDurationMs: 1_000,
+    })
+
+    expect(flow.state.cookingTool).toBe('pot')
+    expect(flow.togglePotLid().ok).toBe(true)
+    expect(flow.addIngredient('meat').ok).toBe(true)
+    expect(flow.addIngredient('twig').ok).toBe(true)
+    expect(flow.switchCookingTool().ok).toBe(false)
+    expect(flow.state.cookingTool).toBe('pot')
+
+    expect(flow.removeIngredient(1).ok).toBe(true)
+    expect(flow.switchCookingTool().ok).toBe(true)
+    expect(flow.state.cookingTool).toBe('campfire')
+    expect(flow.addIngredient('fish').ok).toBe(false)
+    expect(flow.addIngredient('twig').ok).toBe(false)
+    expect(flow.startCooking().ok).toBe(true)
+
+    clock.advance(1_000)
+    expect(flow.finishCooking().ok).toBe(true)
+    expect(flow.state.finishedDish?.id).toBe('grilled_meat')
   })
 
   it('keeps the order after one wrong delivery and counts the mistake once', () => {

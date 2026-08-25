@@ -4,7 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#101a34" />
-    <title>银河餐车</title>
+    <title>星厨餐车</title>
+    <script>
+      // star-letter dev serves the repository root as a plain static site. If
+      // that server cannot transform the TypeScript module, hand off to the
+      // already-built directory entry instead of leaving a blank iframe.
+      (() => {
+        const redirectToBuiltEntry = () => {
+          const app = document.querySelector('#app')
+          const isBuiltEntry = window.location.pathname.includes('/dist/')
+          if (isBuiltEntry) return
+          if (app && app.childElementCount === 0) {
+            window.location.replace('./dist/index.html')
+            return
+          }
+          window.setTimeout(redirectToBuiltEntry, 250)
+        }
+        window.setTimeout(redirectToBuiltEntry, 900)
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -1,13 +1,18 @@
 import type { IngredientId } from './ingredients'
 import {
+  CAMPFIRE_INGREDIENT_COUNT,
+  isGrillableIngredient,
+  matchGrilledDish,
   matchRecipe,
   REQUIRED_INGREDIENT_COUNT,
 } from './recipeMatcher'
-import { RECIPES, type RecipeId } from './recipes'
+import { COOKABLE_DISHES, type OrderId } from './recipes'
 import {
+  DEFAULT_CAMPFIRE_COOK_DURATION_MS,
   DEFAULT_COOK_DURATION_MS,
   DEFAULT_ORDER_TOTAL,
   getCurrentOrderId,
+  type CookingTool,
   type GameState,
 } from './gameState'
 
@@ -16,6 +21,7 @@ export interface GameFlowOptions {
   readonly random?: () => number
   readonly totalOrders?: number
   readonly cookDurationMs?: number
+  readonly campfireCookDurationMs?: number
 }
 
 export type ActionResult =
@@ -24,25 +30,25 @@ export type ActionResult =
 
 type StateListener = (state: GameState) => void
 
-const RECIPE_IDS = RECIPES.map((recipe) => recipe.id)
+const ORDER_IDS = COOKABLE_DISHES.map((dish) => dish.id)
 
 /** Creates an order stream where a recipe can never immediately repeat. */
 export function createOrderSequence(
   totalOrders: number,
   random: () => number = Math.random,
-): readonly RecipeId[] {
+): readonly OrderId[] {
   if (!Number.isInteger(totalOrders) || totalOrders < 1) {
     throw new Error('totalOrders must be a positive integer')
   }
 
-  if (RECIPE_IDS.length < 2 && totalOrders > 1) {
+  if (ORDER_IDS.length < 2 && totalOrders > 1) {
     throw new Error('At least two recipes are required for non-repeating orders')
   }
 
-  const orderIds: RecipeId[] = []
+  const orderIds: OrderId[] = []
   for (let index = 0; index < totalOrders; index += 1) {
-    const candidates = RECIPE_IDS.filter(
-      (recipeId) => recipeId !== orderIds[index - 1],
+    const candidates = ORDER_IDS.filter(
+      (orderId) => orderId !== orderIds[index - 1],
     )
     const boundedIndex = Math.min(
       candidates.length - 1,
@@ -62,6 +68,7 @@ export class GameFlow {
   private readonly random: () => number
   private readonly totalOrders: number
   private readonly cookDurationMs: number
+  private readonly campfireCookDurationMs: number
   private readonly listeners = new Set<StateListener>()
   private internalState: GameState
 
@@ -70,6 +77,7 @@ export class GameFlow {
     this.random = options.random ?? Math.random
     this.totalOrders = options.totalOrders ?? DEFAULT_ORDER_TOTAL
     this.cookDurationMs = options.cookDurationMs ?? DEFAULT_COOK_DURATION_MS
+    this.campfireCookDurationMs = options.campfireCookDurationMs ?? DEFAULT_CAMPFIRE_COOK_DURATION_MS
     this.internalState = this.createRound(this.now())
   }
 
@@ -89,10 +97,28 @@ export class GameFlow {
 
   addIngredient(ingredientId: IngredientId): ActionResult {
     if (this.internalState.phase !== 'SELECTING') {
-      return this.reject('这口锅正在处理上一批食材。')
+      return this.reject('当前厨具正在处理上一批食材。')
     }
-    if (this.internalState.pot.length >= REQUIRED_INGREDIENT_COUNT) {
-      return this.reject('锅已经放满 4 份食材了。')
+    if (this.internalState.cookingTool === 'pot' && !this.internalState.potLidOpen) {
+      return this.reject('请先点击锅盖打开烹饪锅，再放入食材。')
+    }
+    const ingredientLimit = this.internalState.cookingTool === 'campfire'
+      ? CAMPFIRE_INGREDIENT_COUNT
+      : REQUIRED_INGREDIENT_COUNT
+
+    if (
+      this.internalState.cookingTool === 'campfire' &&
+      !isGrillableIngredient(ingredientId)
+    ) {
+      return this.reject('篝火不能直接烤这份食材，请选择肉、鱼、蛋、胡萝卜、蘑菇或浆果。')
+    }
+
+    if (this.internalState.pot.length >= ingredientLimit) {
+      return this.reject(
+        this.internalState.cookingTool === 'campfire'
+          ? '篝火一次只能烤 1 份食材。'
+          : '锅已经放满 4 份食材了。',
+      )
     }
 
     this.update({
@@ -107,7 +133,7 @@ export class GameFlow {
       return this.reject('烹饪开始后不能再调整食材。')
     }
     if (!Number.isInteger(index) || index < 0 || index >= this.internalState.pot.length) {
-      return this.reject('这个锅槽已经是空的。')
+      return this.reject('这个食材槽已经是空的。')
     }
 
     this.update({
@@ -119,12 +145,58 @@ export class GameFlow {
 
   clearPot(): ActionResult {
     if (this.internalState.phase !== 'SELECTING') {
-      return this.reject('烹饪开始后不能清空锅。')
+      return this.reject('烹饪开始后不能清空厨具。')
     }
     if (this.internalState.pot.length === 0) {
-      return this.reject('锅里还没有食材。')
+      return this.reject('厨具里还没有食材。')
     }
     this.update({ pot: [], delivery: null })
+    return { ok: true }
+  }
+
+  togglePotLid(): ActionResult {
+    if (this.internalState.phase !== 'SELECTING') {
+      return this.reject('料理进行中不能操作锅盖。')
+    }
+    if (this.internalState.cookingTool !== 'pot') {
+      return this.reject('当前使用的是篝火，没有可操作的锅盖。')
+    }
+    if (this.internalState.potLidOpen && this.internalState.pot.length > 0) {
+      return this.reject('锅里还有食材，请先移除食材后再合盖。')
+    }
+
+    this.update({
+      potLidOpen: !this.internalState.potLidOpen,
+      delivery: null,
+    })
+    return { ok: true }
+  }
+
+  switchCookingTool(): ActionResult {
+    if (this.internalState.phase !== 'SELECTING') {
+      return this.reject('料理进行中不能切换厨具。')
+    }
+
+    const nextTool: CookingTool = this.internalState.cookingTool === 'pot'
+      ? 'campfire'
+      : 'pot'
+
+    if (nextTool === 'campfire') {
+      if (this.internalState.pot.length > CAMPFIRE_INGREDIENT_COUNT) {
+        return this.reject('篝火一次只能烤 1 份食材，请先点食材槽移除多余食材。')
+      }
+      if (this.internalState.pot.some((ingredientId) => !isGrillableIngredient(ingredientId))) {
+        return this.reject('篝火不能直接烤当前食材，请先点食材槽移除不可烤的食材。')
+      }
+    }
+
+    this.update({
+      cookingTool: nextTool,
+      // 篝火没有锅盖；切回烹饪锅时，空锅合盖待机，有遗留食材则保持开盖
+      // 让玩家可以继续整理槽位。
+      potLidOpen: nextTool === 'pot' ? this.internalState.pot.length > 0 : true,
+      delivery: null,
+    })
     return { ok: true }
   }
 
@@ -132,15 +204,31 @@ export class GameFlow {
     if (this.internalState.phase !== 'SELECTING') {
       return this.reject('现在不能开始新的烹饪。')
     }
-    if (this.internalState.pot.length !== REQUIRED_INGREDIENT_COUNT) {
-      return this.reject('请先放满 4 份食材。')
+    if (this.internalState.cookingTool === 'pot' && !this.internalState.potLidOpen) {
+      return this.reject('请先打开锅盖并放入食材。')
+    }
+    const requiredIngredientCount = this.internalState.cookingTool === 'campfire'
+      ? CAMPFIRE_INGREDIENT_COUNT
+      : REQUIRED_INGREDIENT_COUNT
+
+    if (this.internalState.pot.length !== requiredIngredientCount) {
+      return this.reject(
+        this.internalState.cookingTool === 'campfire'
+          ? '请先放入 1 份可直接烤制的食材。'
+          : '请先放满 4 份食材。',
+      )
     }
 
     const startedAt = this.now()
     this.update({
       phase: 'COOKING',
       cookingStartedAt: startedAt,
-      cookingEndsAt: startedAt + this.cookDurationMs,
+      cookingEndsAt: startedAt + (
+        this.internalState.cookingTool === 'campfire'
+          ? this.campfireCookDurationMs
+          : this.cookDurationMs
+      ),
+      potLidOpen: this.internalState.cookingTool === 'campfire',
       delivery: null,
     })
     return { ok: true }
@@ -148,7 +236,7 @@ export class GameFlow {
 
   finishCooking(): ActionResult {
     if (this.internalState.phase !== 'COOKING') {
-      return this.reject('锅现在没有在烹饪。')
+      return this.reject('当前厨具没有在烹饪。')
     }
     if (
       this.internalState.cookingEndsAt !== null &&
@@ -159,9 +247,12 @@ export class GameFlow {
 
     this.update({
       phase: 'READY',
-      finishedDish: matchRecipe(this.internalState.pot),
+      finishedDish: this.internalState.cookingTool === 'campfire'
+        ? matchGrilledDish(this.internalState.pot)
+        : matchRecipe(this.internalState.pot),
       cookingStartedAt: null,
       cookingEndsAt: null,
+      potLidOpen: this.internalState.cookingTool === 'campfire',
     })
     return { ok: true }
   }
@@ -210,6 +301,8 @@ export class GameFlow {
   private createRound(startedAt: number): GameState {
     return {
       phase: 'SELECTING',
+      cookingTool: 'pot',
+      potLidOpen: false,
       pot: [],
       finishedDish: null,
       orderIds: createOrderSequence(this.totalOrders, this.random),

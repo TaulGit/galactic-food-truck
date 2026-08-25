@@ -28,6 +28,7 @@ export interface Ingredient {
   readonly id: IngredientId;
   readonly name: string;
   readonly icon: string;
+  readonly image: string;
   readonly source: IngredientSource;
   readonly tags: readonly IngredientTag[];
 }
@@ -37,6 +38,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "twig",
     name: "树枝",
     icon: "🌿",
+    image: "./assets/ingredients/ingredient-twig.png",
     source: "chest",
     tags: ["filler"],
   },
@@ -44,6 +46,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "honey",
     name: "蜂蜜",
     icon: "🍯",
+    image: "./assets/ingredients/ingredient-honey.png",
     source: "chest",
     tags: ["sweet", "filler"],
   },
@@ -51,6 +54,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "berries",
     name: "浆果",
     icon: "🫐",
+    image: "./assets/ingredients/ingredient-berries.png",
     source: "chest",
     tags: ["sweet", "filler"],
   },
@@ -58,6 +62,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "meat",
     name: "肉",
     icon: "🥩",
+    image: "./assets/ingredients/ingredient-meat.png",
     source: "fridge",
     tags: ["meat"],
   },
@@ -65,6 +70,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "fish",
     name: "鱼",
     icon: "🐟",
+    image: "./assets/ingredients/ingredient-fish.png",
     source: "fridge",
     tags: ["fish"],
   },
@@ -72,6 +78,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "egg",
     name: "蛋",
     icon: "🥚",
+    image: "./assets/ingredients/ingredient-egg.png",
     source: "fridge",
     tags: ["egg"],
   },
@@ -79,6 +86,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "carrot",
     name: "胡萝卜",
     icon: "🥕",
+    image: "./assets/ingredients/ingredient-carrot.png",
     source: "fridge",
     tags: ["vegetable"],
   },
@@ -86,6 +94,7 @@ export const INGREDIENTS: Readonly<Record<IngredientId, Ingredient>> = {
     id: "mushroom",
     name: "蘑菇",
     icon: "🍄",
+    image: "./assets/ingredients/ingredient-mushroom.png",
     source: "fridge",
     tags: ["vegetable"],
   },

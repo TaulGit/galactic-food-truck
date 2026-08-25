@@ -1,8 +1,11 @@
 import type { IngredientId } from './ingredients'
-import type { CookedDish, RecipeId } from './recipes'
+import type { CookedDish, OrderId } from './recipes'
 
 export const DEFAULT_ORDER_TOTAL = 5
 export const DEFAULT_COOK_DURATION_MS = 3_000
+export const DEFAULT_CAMPFIRE_COOK_DURATION_MS = 2_000
+
+export type CookingTool = 'pot' | 'campfire'
 
 export type GamePhase =
   | 'SELECTING'
@@ -14,7 +17,7 @@ export type GamePhase =
 export interface DeliveryFeedback {
   readonly correct: boolean
   readonly dish: CookedDish
-  readonly orderId: RecipeId
+  readonly orderId: OrderId
 }
 
 /**
@@ -23,9 +26,11 @@ export interface DeliveryFeedback {
  */
 export interface GameState {
   readonly phase: GamePhase
+  readonly cookingTool: CookingTool
+  readonly potLidOpen: boolean
   readonly pot: readonly IngredientId[]
   readonly finishedDish: CookedDish | null
-  readonly orderIds: readonly RecipeId[]
+  readonly orderIds: readonly OrderId[]
   readonly completedOrders: number
   readonly totalOrders: number
   readonly mistakes: number
@@ -36,7 +41,7 @@ export interface GameState {
   readonly delivery: DeliveryFeedback | null
 }
 
-export function getCurrentOrderId(state: GameState): RecipeId | null {
+export function getCurrentOrderId(state: GameState): OrderId | null {
   return state.orderIds[state.completedOrders] ?? null
 }
 

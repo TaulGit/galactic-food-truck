@@ -7,6 +7,7 @@ import {
 } from "./ingredients";
 import {
   FAILED_RECIPE,
+  GRILLED_DISHES,
   RECIPES,
   type CookedDish,
   type IngredientRule,
@@ -17,6 +18,7 @@ import {
 
 /** Every cooking attempt must contain exactly four ingredients. */
 export const REQUIRED_INGREDIENT_COUNT = 4;
+export const CAMPFIRE_INGREDIENT_COUNT = 1;
 
 export type TagCounts = Readonly<Record<IngredientTag, number>>;
 export type IngredientCounts = Readonly<Record<IngredientId, number>>;
@@ -136,4 +138,21 @@ export function matchRecipe(
   ingredientIds: readonly IngredientId[],
 ): CookedDish {
   return getMatchingRecipes(ingredientIds)[0] ?? FAILED_RECIPE;
+}
+
+export function isGrillableIngredient(ingredientId: IngredientId): boolean {
+  return GRILLED_DISHES.some((dish) => dish.ingredientId === ingredientId);
+}
+
+/** Resolves the single raw ingredient accepted by the campfire. */
+export function matchGrilledDish(
+  ingredientIds: readonly IngredientId[],
+): CookedDish {
+  if (ingredientIds.length !== CAMPFIRE_INGREDIENT_COUNT) {
+    return FAILED_RECIPE;
+  }
+
+  return GRILLED_DISHES.find(
+    (dish) => dish.ingredientId === ingredientIds[0],
+  ) ?? FAILED_RECIPE;
 }

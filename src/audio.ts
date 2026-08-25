@@ -1,5 +1,10 @@
 export type KitchenSound = 'ingredient' | 'cook' | 'ready' | 'correct' | 'wrong'
 
+const backgroundTracks = [
+  './assets/audio/stardust-kitchen-1.mp3',
+  './assets/audio/stardust-kitchen-2.mp3',
+] as const
+
 const soundSettings: Record<
   KitchenSound,
   { readonly frequency: number; readonly duration: number; readonly type: OscillatorType }
@@ -11,9 +16,22 @@ const soundSettings: Record<
   wrong: { frequency: 155, duration: 0.2, type: 'sawtooth' },
 }
 
-/** Tiny synthesized feedback sounds; no external audio assets are required. */
+/** Synthesized feedback sounds plus the game's rotating background music. */
 export class KitchenAudio {
   private context: AudioContext | null = null
+  private readonly backgroundMusic = backgroundTracks.map((source) => {
+    const track = new Audio(source)
+    track.preload = 'auto'
+    track.volume = 0.14
+    track.addEventListener('ended', () => this.playNextTrack())
+    track.addEventListener('error', () => {
+      if (this.playingTrack === track) this.playNextTrack()
+    })
+    return track
+  })
+  private backgroundTrackIndex = 0
+  private backgroundMusicPlaying = false
+  private playingTrack: HTMLAudioElement | null = null
   private muted = false
 
   get isMuted(): boolean {
@@ -22,7 +40,29 @@ export class KitchenAudio {
 
   toggleMuted(): boolean {
     this.muted = !this.muted
+    if (this.muted) {
+      this.stopBackgroundMusic()
+    } else {
+      this.startBackgroundMusic()
+    }
     return this.muted
+  }
+
+  /** Start after a user gesture so browser autoplay policies do not block it. */
+  startBackgroundMusic(): void {
+    if (this.muted || this.backgroundMusicPlaying) return
+
+    const track = this.backgroundMusic[this.backgroundTrackIndex]
+    if (!track) return
+
+    this.backgroundMusicPlaying = true
+    this.playingTrack = track
+    void track.play().catch(() => {
+      if (this.playingTrack === track) {
+        this.backgroundMusicPlaying = false
+        this.playingTrack = null
+      }
+    })
   }
 
   play(sound: KitchenSound): void {
@@ -50,5 +90,22 @@ export class KitchenAudio {
       // Audio is optional feedback. Some preview environments intentionally
       // omit audio support, so gameplay must never depend on it.
     }
+  }
+
+  private stopBackgroundMusic(): void {
+    for (const track of this.backgroundMusic) {
+      track.pause()
+    }
+    this.backgroundMusicPlaying = false
+    this.playingTrack = null
+  }
+
+  private playNextTrack(): void {
+    this.backgroundMusicPlaying = false
+    this.playingTrack = null
+    if (this.muted) return
+
+    this.backgroundTrackIndex = (this.backgroundTrackIndex + 1) % this.backgroundMusic.length
+    this.startBackgroundMusic()
   }
 }
