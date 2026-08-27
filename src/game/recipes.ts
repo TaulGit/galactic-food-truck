@@ -41,6 +41,7 @@ export interface Recipe {
   readonly id: RecipeId;
   readonly name: string;
   readonly icon: string;
+  readonly image?: string;
   readonly hint: string;
   readonly isFailure: false;
   readonly priority: number;
@@ -51,6 +52,7 @@ export interface GrilledDish {
   readonly id: GrilledDishId;
   readonly name: string;
   readonly icon: string;
+  readonly image: string;
   readonly hint: string;
   readonly ingredientId: IngredientId;
   readonly isFailure: false;
@@ -60,6 +62,7 @@ export interface FailedDish {
   readonly id: FailedDishId;
   readonly name: string;
   readonly icon: string;
+  readonly image?: string;
   readonly hint: string;
   readonly isFailure: true;
 }
@@ -75,6 +78,7 @@ export const RECIPES: readonly Recipe[] = [
     id: "honey_ham",
     name: "蜜汁火腿",
     icon: "🍖",
+    image: "./assets/dishes/dish-honey-ham.png",
     hint: "至少 2 份肉类 + 1 份甜味食材",
     isFailure: false,
     priority: 500,
@@ -86,6 +90,7 @@ export const RECIPES: readonly Recipe[] = [
     id: "dumplings",
     name: "饺子",
     icon: "🥟",
+    image: "./assets/dishes/dish-dumplings.png",
     hint: "肉类、蛋类和蔬菜各至少 1 份",
     isFailure: false,
     priority: 400,
@@ -97,6 +102,7 @@ export const RECIPES: readonly Recipe[] = [
     id: "fish_steak",
     name: "鱼排",
     icon: "🐟",
+    image: "./assets/dishes/dish-fish-steak.png",
     hint: "至少 1 份鱼类",
     isFailure: false,
     priority: 300,
@@ -108,6 +114,7 @@ export const RECIPES: readonly Recipe[] = [
     id: "vegetable_medley",
     name: "蔬菜杂烩",
     icon: "🥘",
+    image: "./assets/dishes/dish-vegetable-medley.png",
     hint: "至少 2 份蔬菜，不能加入肉、鱼或蛋",
     isFailure: false,
     priority: 200,
@@ -120,6 +127,7 @@ export const RECIPES: readonly Recipe[] = [
     id: "meatballs",
     name: "肉丸",
     icon: "🧆",
+    image: "./assets/dishes/dish-meatballs.png",
     hint: "至少 1 份肉类 + 2 份填充物",
     isFailure: false,
     priority: 100,
@@ -135,6 +143,7 @@ export const GRILLED_DISHES: readonly GrilledDish[] = [
     id: "grilled_meat",
     name: "烤肉",
     icon: "🍖",
+    image: "./assets/dishes/dish-grilled-meat.png",
     hint: "篝火直接烤制肉",
     ingredientId: "meat",
     isFailure: false,
@@ -143,6 +152,7 @@ export const GRILLED_DISHES: readonly GrilledDish[] = [
     id: "grilled_fish",
     name: "烤鱼",
     icon: "🐟",
+    image: "./assets/dishes/dish-grilled-fish.png",
     hint: "篝火直接烤制鱼",
     ingredientId: "fish",
     isFailure: false,
@@ -151,6 +161,7 @@ export const GRILLED_DISHES: readonly GrilledDish[] = [
     id: "grilled_egg",
     name: "烤蛋",
     icon: "🍳",
+    image: "./assets/dishes/dish-grilled-egg.png",
     hint: "篝火直接烤制蛋",
     ingredientId: "egg",
     isFailure: false,
@@ -159,14 +170,16 @@ export const GRILLED_DISHES: readonly GrilledDish[] = [
     id: "grilled_carrot",
     name: "烤胡萝卜",
     icon: "🥕",
+    image: "./assets/dishes/dish-grilled-carrot.png",
     hint: "篝火直接烤制胡萝卜",
     ingredientId: "carrot",
     isFailure: false,
   },
   {
     id: "grilled_mushroom",
-    name: "烤蘑菇",
+    name: "烤红蘑菇",
     icon: "🍄",
+    image: "./assets/dishes/dish-grilled-mushroom.png",
     hint: "篝火直接烤制蘑菇",
     ingredientId: "mushroom",
     isFailure: false,
@@ -175,6 +188,7 @@ export const GRILLED_DISHES: readonly GrilledDish[] = [
     id: "grilled_berries",
     name: "烤浆果",
     icon: "🫐",
+    image: "./assets/dishes/dish-grilled-berries.png",
     hint: "篝火直接烤制浆果",
     ingredientId: "berries",
     isFailure: false,

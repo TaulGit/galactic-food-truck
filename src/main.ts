@@ -55,6 +55,12 @@ const TOOL_COPY: Readonly<Record<CookingTool, {
 
 type OrderDish = Recipe | GrilledDish
 
+interface DishDisplay {
+  readonly name: string
+  readonly icon: string
+  readonly image?: string
+}
+
 let activePanel: Panel = null
 let toast: Toast | null = null
 let toastTimer: number | undefined
@@ -64,6 +70,21 @@ let previousPhase: GamePhase = flow.state.phase
 
 function dishFor(id: string | null): OrderDish | null {
   return [...RECIPES, ...GRILLED_DISHES].find((dish) => dish.id === id) ?? null
+}
+
+function renderDishLabel(dish: DishDisplay, modifier = ''): string {
+  const className = `dish-label${modifier ? ` ${modifier}` : ''}`
+  const visual = dish.image
+    ? `<span class="dish-label__art"><img src="${dish.image}" alt="" aria-hidden="true" draggable="false" /></span>`
+    : `<span class="dish-label__emoji" aria-hidden="true">${dish.icon}</span>`
+
+  return `<span class="${className}">${visual}<span class="dish-label__name">${dish.name}</span></span>`
+}
+
+function renderDishVisual(dish: DishDisplay): string {
+  return dish.image
+    ? `<img src="${dish.image}" alt="" aria-hidden="true" draggable="false" />`
+    : `<span class="order-card__visual-emoji" aria-hidden="true">${dish.icon}</span>`
 }
 
 function formatTime(milliseconds: number): string {
@@ -91,7 +112,7 @@ function statusText(state: GameState): string {
   }
   if (state.phase === 'ROUND_OVER') return '本局已结算，准备好就再来一局。'
   if (state.cookingTool === 'pot' && !state.potLidOpen) {
-    return '锅盖已合上，点击锅盖打开后再放入食材。'
+    return '锅盖已合上；冰箱和箱子仍可查看，点击锅盖后才能取料。'
   }
   if (state.pot.length === 0) {
     return state.cookingTool === 'campfire'
@@ -134,8 +155,9 @@ function renderSlots(state: GameState): string {
 
 function renderStoragePanel(source: IngredientSource, state: GameState): string {
   const title = source === 'chest' ? '食材箱' : '冰箱'
+  const potClosed = state.cookingTool === 'pot' && !state.potLidOpen
   const subtitle = state.cookingTool === 'pot' && !state.potLidOpen
-    ? '锅盖已合上，请先点击锅盖打开烹饪锅。'
+    ? '锅盖已合上，可查看食材；打开锅盖后才能取出食材。'
     : state.cookingTool === 'campfire'
     ? source === 'chest'
       ? '篝火直烤：浆果可以上火，树枝和蜂蜜不能直接烤。'
@@ -144,9 +166,7 @@ function renderStoragePanel(source: IngredientSource, state: GameState): string 
       ? '树枝、蜂蜜和浆果都可以反复取用。'
       : '肉、鱼、蛋与蔬菜存放在这里。'
   const ingredientLimit = state.cookingTool === 'campfire' ? 1 : 4
-  const disabled = state.phase !== 'SELECTING'
-    || state.pot.length >= ingredientLimit
-    || (state.cookingTool === 'pot' && !state.potLidOpen)
+  const disabled = state.phase !== 'SELECTING' || state.pot.length >= ingredientLimit
   const ingredientIds = INGREDIENTS_BY_SOURCE[source]
   const slots = Array.from({ length: 6 }, (_, index) => {
     const ingredientId = ingredientIds[index]
@@ -156,8 +176,8 @@ function renderStoragePanel(source: IngredientSource, state: GameState): string 
 
     const ingredient = INGREDIENTS[ingredientId]
     const grillBlocked = state.cookingTool === 'campfire' && !isGrillableIngredient(ingredientId)
-    const itemDisabled = disabled || grillBlocked
-    const itemHint = state.cookingTool === 'pot' && !state.potLidOpen
+    const itemDisabled = disabled || potClosed || grillBlocked
+    const itemHint = potClosed
       ? '请先打开锅盖'
       : grillBlocked
         ? '篝火不能直接烤'
@@ -221,9 +241,7 @@ function render(): void {
   const nextCookingTool: CookingTool = state.cookingTool === 'pot' ? 'campfire' : 'pot'
   const nextTool = TOOL_COPY[nextCookingTool]
   const potLidOpen = state.cookingTool === 'pot' && state.potLidOpen
-  const storageDisabled = state.phase !== 'SELECTING' || (
-    state.cookingTool === 'pot' && !state.potLidOpen
-  )
+  const storageDisabled = state.phase !== 'SELECTING'
   const requiredIngredientCount = state.cookingTool === 'campfire' ? 1 : 4
   const canStartCooking = state.phase === 'SELECTING'
     && state.pot.length === requiredIngredientCount
@@ -236,6 +254,7 @@ function render(): void {
     ? (state.delivery?.correct ? 'correct' : 'wrong')
     : ''
   const readyDish = state.finishedDish
+  const showCookingSlots = state.cookingTool === 'campfire' || state.potLidOpen
   const cookButtonLabel = state.phase === 'COOKING'
     ? `${tool.action.slice(2)}中…`
     : state.phase === 'READY' || state.phase === 'DELIVERING'
@@ -245,24 +264,25 @@ function render(): void {
   app.innerHTML = `
     <div class="app-shell" data-state="${stateName}" data-tool="${state.cookingTool}">
       <header class="game-header">
-        <div>
-          <h1>星厨餐车</h1>
+        <div class="game-brand">
+          <h1><img class="game-logo" src="./assets/game-logo.png" alt="" aria-hidden="true" draggable="false" />星厨餐车</h1>
           <p>单房间星际厨房 · 取料、下锅 / 上火、出餐</p>
         </div>
-        <button class="action-button secondary sound-button" type="button" data-action="toggle-sound" aria-pressed="${!audio.isMuted}">
-          ${audio.isMuted ? '开启声音' : '静音'}
-        </button>
-      </header>
-      <main class="game-stage">
         <section class="hud" aria-label="本局状态">
           <article class="order-card" data-state="${orderFeedback}">
-            <span>${currentOrder ? '当前目标' : '本局状态'}</span>
-            <strong>${currentOrder ? `${currentOrder.icon} ${currentOrder.name}` : '全部订单完成'}</strong>
+            <span class="order-card__visual">${currentOrder ? renderDishVisual(currentOrder) : '<span class="order-card__visual-emoji" aria-hidden="true">✓</span>'}</span>
+            <span class="order-card__caption">${currentOrder ? '当前目标' : '本局状态'}</span>
+            <strong class="order-card__dish-name">${currentOrder ? currentOrder.name : '全部订单完成'}</strong>
           </article>
           <div class="hud-stat"><h2>订单</h2><strong>${state.completedOrders}/${state.totalOrders}</strong></div>
           <div class="hud-stat"><h2>失误</h2><strong>${state.mistakes}</strong></div>
           <div class="hud-stat"><h2>用时</h2><strong data-elapsed>${formatTime(getElapsedMs(state, Date.now()))}</strong></div>
         </section>
+        <button class="action-button secondary sound-button" type="button" data-action="toggle-sound" aria-pressed="${!audio.isMuted}">
+          ${audio.isMuted ? '开启声音' : '静音'}
+        </button>
+      </header>
+      <main class="game-stage">
         <section class="room" aria-label="星际厨房" data-storage-open="${activePanel ? 'true' : 'false'}">
           <div class="room-background" aria-hidden="true">
             <img class="room-background__art" src="./assets/room-background.png" alt="" draggable="false" />
@@ -280,10 +300,12 @@ function render(): void {
               ? `<button class="pot-lid-toggle" type="button" data-action="toggle-pot-lid" aria-pressed="${state.potLidOpen}" aria-label="${state.potLidOpen ? '合上锅盖' : '打开锅盖并准备投料'}" title="${state.potLidOpen ? '锅内有食材时不能合盖' : '打开锅盖并准备投料'}">
                   <img class="facility-art facility-art--pot" src="./assets/facilities/facility-pot-${state.potLidOpen ? 'open' : 'closed'}.png" alt="" aria-hidden="true" draggable="false" />
                 </button>`
-              : `<img class="facility-art facility-art--campfire" src="./assets/facilities/facility-campfire.png" alt="" aria-hidden="true" draggable="false" />`}
+              : `<img class="facility-art facility-art--campfire" src="./assets/facilities/facility-campfire-transparent.png" alt="" aria-hidden="true" draggable="false" />`}
             <strong>${tool.icon} ${tool.name}${state.cookingTool === 'pot' ? ` · ${state.potLidOpen ? '开盖' : '合盖'}` : ''}</strong>
             <span>${statusText(state)}</span>
-            <div class="pot-slots${state.cookingTool === 'campfire' ? ' campfire-slots' : ''}" aria-label="${state.cookingTool === 'campfire' ? '一个烤制槽' : '四个锅槽'}">${renderSlots(state)}</div>
+            ${showCookingSlots
+              ? `<div class="pot-slots${state.cookingTool === 'campfire' ? ' campfire-slots' : ''}" aria-label="${state.cookingTool === 'campfire' ? '一个烤制槽' : '四个锅槽'}">${renderSlots(state)}</div>`
+              : ''}
             <div class="panel-actions">
               <button class="action-button secondary pot-main-action utensil-switch-button" type="button" data-action="switch-utensil" ${state.phase === 'SELECTING' ? '' : 'disabled'} aria-label="切换厨具，当前为${tool.name}">
                 <span>切换厨具</span>
@@ -294,7 +316,7 @@ function render(): void {
           </section>
           <button class="facility serving-window" type="button" data-action="deliver" data-state="${servingState}" ${state.phase === 'READY' ? '' : 'disabled'}>
             <img class="facility-art facility-art--serving" src="./assets/facilities/facility-serving.png" alt="" aria-hidden="true" draggable="false" />
-            <strong>${readyDish ? `${readyDish.icon} ${readyDish.name}` : '星际出餐口'}</strong>
+            <strong class="serving-window__dish">${readyDish ? renderDishLabel(readyDish) : '星际出餐口'}</strong>
             <span>${state.phase === 'READY' ? '成品已到位，点击出餐' : currentOrder ? '等待成品送达' : '本局已完成'}</span>
           </button>
           ${activePanel ? renderStoragePanel(activePanel, state) : ''}
@@ -318,6 +340,7 @@ function showToast(message: string, kind: ToastKind = 'info'): void {
 
 function handleResult(result: ActionResult, onSuccess?: () => void): void {
   if (!result.ok) {
+    audio.play('error')
     showToast(result.reason, 'error')
     return
   }
@@ -360,15 +383,19 @@ app.addEventListener('click', (event) => {
     case 'open-panel': {
       const panel = control.dataset.panel as Panel
       if (!panel || flow.state.phase !== 'SELECTING') {
+        audio.play('error')
         showToast('请等待当前这批料理完成。', 'error')
         return
       }
+      const wasOpen = activePanel === panel
       activePanel = activePanel === panel ? null : panel
+      audio.play(wasOpen ? 'close' : 'open')
       render()
       break
     }
     case 'close-storage':
       activePanel = null
+      audio.play('close')
       render()
       break
     case 'add-ingredient': {
@@ -388,16 +415,23 @@ app.addEventListener('click', (event) => {
       break
     }
     case 'remove-ingredient':
-      handleResult(flow.removeIngredient(Number(control.dataset.index)))
+      handleResult(flow.removeIngredient(Number(control.dataset.index)), () => {
+        audio.play('remove')
+      })
       break
     case 'toggle-pot-lid':
       handleResult(flow.togglePotLid(), () => {
-        if (!flow.state.potLidOpen) activePanel = null
-        showToast(flow.state.potLidOpen ? '锅盖已打开，可以从冰箱或箱子投料。' : '锅盖已合上。')
+        audio.play('lid')
+        showToast(
+          flow.state.potLidOpen
+            ? '锅盖已打开，可以从冰箱或箱子取料。'
+            : '锅盖已合上；仍可打开冰箱和箱子查看。',
+        )
       })
       break
     case 'switch-utensil':
       handleResult(flow.switchCookingTool(), () => {
+        audio.play('switch')
         activePanel = null
         showToast(`已切换到${TOOL_COPY[flow.state.cookingTool].name}。`)
       })
@@ -408,15 +442,19 @@ app.addEventListener('click', (event) => {
       })
       break
     case 'deliver':
-      handleResult(flow.beginDelivery())
+      handleResult(flow.beginDelivery(), () => {
+        audio.play('serve')
+      })
       break
     case 'restart':
       activePanel = null
       toast = null
+      audio.play('restart')
       flow.restart()
       break
     case 'toggle-sound':
       audio.toggleMuted()
+      if (!audio.isMuted) audio.play('toggle')
       render()
       break
     default:

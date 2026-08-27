@@ -1,4 +1,18 @@
-export type KitchenSound = 'ingredient' | 'cook' | 'ready' | 'correct' | 'wrong'
+export type KitchenSound =
+  | 'open'
+  | 'close'
+  | 'ingredient'
+  | 'remove'
+  | 'lid'
+  | 'switch'
+  | 'cook'
+  | 'serve'
+  | 'ready'
+  | 'correct'
+  | 'wrong'
+  | 'restart'
+  | 'toggle'
+  | 'error'
 
 const backgroundTracks = [
   './assets/audio/stardust-kitchen-1.mp3',
@@ -9,11 +23,20 @@ const soundSettings: Record<
   KitchenSound,
   { readonly frequency: number; readonly duration: number; readonly type: OscillatorType }
 > = {
+  open: { frequency: 680, duration: 0.07, type: 'sine' },
+  close: { frequency: 430, duration: 0.07, type: 'sine' },
   ingredient: { frequency: 540, duration: 0.06, type: 'sine' },
+  remove: { frequency: 340, duration: 0.08, type: 'triangle' },
+  lid: { frequency: 310, duration: 0.14, type: 'triangle' },
+  switch: { frequency: 520, duration: 0.14, type: 'square' },
   cook: { frequency: 230, duration: 0.18, type: 'triangle' },
+  serve: { frequency: 610, duration: 0.1, type: 'square' },
   ready: { frequency: 730, duration: 0.22, type: 'sine' },
   correct: { frequency: 880, duration: 0.18, type: 'triangle' },
   wrong: { frequency: 155, duration: 0.2, type: 'sawtooth' },
+  restart: { frequency: 260, duration: 0.16, type: 'triangle' },
+  toggle: { frequency: 760, duration: 0.08, type: 'sine' },
+  error: { frequency: 180, duration: 0.12, type: 'sawtooth' },
 }
 
 /** Synthesized feedback sounds plus the game's rotating background music. */
@@ -72,6 +95,7 @@ export class KitchenAudio {
       const AudioContextConstructor = window.AudioContext
       if (!AudioContextConstructor) return
       this.context ??= new AudioContextConstructor()
+      if (this.context.state === 'suspended') void this.context.resume()
       const { frequency, duration, type } = soundSettings[sound]
       const oscillator = this.context.createOscillator()
       const gain = this.context.createGain()
