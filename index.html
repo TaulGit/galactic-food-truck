@@ -8,8 +8,13 @@
     <script>
       // star-letter dev serves the repository root as a plain static site. If
       // that server cannot transform the TypeScript module, hand off to the
-      // already-built directory entry instead of leaving a blank iframe.
+      // already-built directory entry instead of leaving a blank iframe. The
+      // published directory entry is uploaded at the object root, so this
+      // fallback must never run on the CDN-hosted game.
       (() => {
+        const isLocalDevServer = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+        if (!isLocalDevServer) return
+
         const redirectToBuiltEntry = () => {
           const app = document.querySelector('#app')
           const isBuiltEntry = window.location.pathname.includes('/dist/')
